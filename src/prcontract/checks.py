@@ -281,6 +281,25 @@ def check_duplicates(pr: PullRequest, opts: dict[str, Any], ctx: Context) -> Out
 # -- commands -------------------------------------------------------------------
 
 
+_QUOTES = "'\""
+
+
+def split_command(command: str, windows: bool | None = None) -> list[str]:
+    """Split a configured command line into arguments, with the same quoting on every OS.
+
+    POSIX rules apply, except on Windows where a backslash is a path separator, not
+    an escape. There shlex keeps the quote characters inside each word, so wholly
+    quoted words are unwrapped here: `python -c 'print(1)'` must hand python the
+    code `print(1)`, not the string literal `'print(1)'`.
+    """
+    if windows is None:
+        windows = os.name == "nt"
+    if not windows:
+        return shlex.split(command)
+    words = shlex.split(command, posix=False)
+    return [w[1:-1] if len(w) >= 2 and w[0] == w[-1] and w[0] in _QUOTES else w for w in words]
+
+
 def check_commands(pr: PullRequest, opts: dict[str, Any], ctx: Context) -> Outcome:
     commands = opts["run"]
     if not commands:
@@ -292,7 +311,7 @@ def check_commands(pr: PullRequest, opts: dict[str, Any], ctx: Context) -> Outco
     for command in commands:
         try:
             proc = subprocess.run(
-                shlex.split(command, posix=(os.name != "nt")),
+                split_command(command),
                 cwd=ctx.cwd,
                 capture_output=True,
                 encoding="utf-8",

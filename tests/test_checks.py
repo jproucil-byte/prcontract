@@ -19,6 +19,7 @@ from prcontract.checks import (
     parse_disclosure,
     parse_sections,
     run_checks,
+    split_command,
 )
 from prcontract.config import merge
 from prcontract.github import GitHubError
@@ -271,6 +272,28 @@ def test_commands_skipped_unless_enabled(ctx):
     assert check_commands(make_pr(), opts("commands"), ctx).skipped
     configured = opts("commands", run=["true"])
     assert "not run" in check_commands(make_pr(), configured, ctx).message
+
+
+@pytest.mark.parametrize("windows", [False, True])
+def test_split_command_unwraps_quotes_on_every_os(windows):
+    code = 'import sys; print("boom"); sys.exit(3)'
+    assert split_command(f"python -c '{code}'", windows=windows) == ["python", "-c", code]
+    assert split_command('python -c "print(1)" --flag', windows=windows) == [
+        "python",
+        "-c",
+        "print(1)",
+        "--flag",
+    ]
+
+
+def test_split_command_keeps_windows_backslashes_but_not_posix_ones():
+    path = r"C:\hostedtoolcache\Python\3.12\python.exe"
+    assert split_command(f"{path} -V", windows=True) == [path, "-V"]
+    assert split_command(r"echo a\ b", windows=False) == ["echo", "a b"]
+    assert split_command(r'"C:\Program Files\py\python.exe" -V', windows=True) == [
+        r"C:\Program Files\py\python.exe",
+        "-V",
+    ]
 
 
 def test_commands_pass_fail_missing_and_timeout(tmp_path):

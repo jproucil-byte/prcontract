@@ -107,7 +107,8 @@ def test_config_file_in_cwd_is_used(repo, monkeypatch, capsys):
 def test_run_executes_configured_commands(repo, monkeypatch, capsys):
     branch(repo)
     failing = f"{sys.executable} -c 'import sys; sys.exit(1)'"
-    (repo / "prc.toml").write_text(f'[commands]\nrun = ["{failing}"]\n')
+    # json.dumps escapes backslashes (Windows interpreter paths) for the TOML string.
+    (repo / "prc.toml").write_text(f"[commands]\nrun = [{json.dumps(failing)}]\n")
     body = write_body(repo)
     code, out, _ = run(repo, monkeypatch, capsys, "--config", "prc.toml", "--body-file", body)
     assert code == 0 and "[skip] commands" in out  # never runs without --run
