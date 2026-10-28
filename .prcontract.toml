@@ -1,0 +1,33 @@
+# prcontract checks its own pull requests with this file.
+# Regenerate a fully commented reference with: prcontract init --path /dev/stdout
+
+[diff-size]
+severity = "error"
+max_files = 30
+max_lines = 1000
+
+[issue-link]
+severity = "error"
+
+[pr-sections]
+severity = "warn"
+required = ["What", "Why", "Testing"]
+
+[ai-disclosure]
+severity = "error"
+
+[tests-with-code]
+severity = "warn"
+source = ["src/**"]
+tests = ["tests/**"]
+
+[protected-paths]
+severity = "error"
+paths = [".github/workflows/**", "action.yml", "LICENSE*"]
+
+[duplicates]
+severity = "warn"
+
+[commands]
+severity = "error"
+run = ["python -m pytest -q"]

@@ -1,0 +1,18 @@
+# prcontract checks its own pull requests (see examples/workflow.yml for the annotated version).
+name: PR contract
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      # Base branch only. Never check out the pull request head in this workflow.
+      - uses: actions/checkout@v4
+      - uses: ./

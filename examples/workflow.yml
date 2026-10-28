@@ -1,0 +1,27 @@
+# .github/workflows/pr-contract.yml
+#
+# Safe setup for public repositories, including pull requests from forks.
+#
+# - `pull_request_target` runs in the context of the BASE repository, so the token can
+#   comment on fork PRs and the config always comes from your default branch.
+# - prcontract reads the pull request through the GitHub API only. The PR's code is never
+#   checked out and never executed. Do not add a step that checks out the PR head here.
+name: PR contract
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4 # base branch only, to read .prcontract.toml
+      - uses: jproucil-byte/prcontract@v0
+        # with:
+        #   fail-on: error     # error | warn | never
+        #   comment: "true"
